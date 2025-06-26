@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "st-annotator"
+version = "0.0.1"
+description = "Component for annotating text for NLP resolution"
+classifiers = ["Programming Language :: Python :: 3", "License :: OSI Approved :: MIT License", "Operating System :: OS Independent"]
+authors = ["Ettore Caputo"]
+license = "MIT"
+readme = "README.md"
+keywords = ["streamlit", "text", "annotation", "nlp", "argument mining", "annotator"]
+include = ["./src/st_annotator/frontend/build/**/*"]
+exclude = ["**/node_modules/**/*"]
+packages = [{include = "st_annotator", from = "src"}]
+
+[tool.poetry.dependencies]
+python = ">=3.8,<3.9.7 || >3.9.7,<4.0.0"
+streamlit = "^1.21.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
