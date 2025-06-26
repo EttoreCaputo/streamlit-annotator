@@ -1,7 +1,13 @@
 
 # st-annotator
+[![PyPI version](https://badge.fury.io/py/st-annotator.svg)](https://badge.fury.io/py/st-annotator)
+
 st-annotator is a Streamlit component usefull to annotate text, expecially for NLP and Argument Mining purposes.
 Based on the original project [Streamlit Annotation Tools](https://github.com/streamlit/annotation-tools) of [rmarquet21](https://github.com/rmarquet21).
+
+
+# Demo on Streamlit Cloud
+[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://app-annotator.streamlit.app)
 
 ## New Features
 - Custom colors to the labels
