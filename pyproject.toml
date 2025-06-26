@@ -3,7 +3,7 @@ name = "st-annotator"
 version = "0.0.1"
 description = "Component for annotating text for NLP resolution"
 classifiers = ["Programming Language :: Python :: 3", "License :: OSI Approved :: MIT License", "Operating System :: OS Independent"]
-authors = ["Ettore Caputo"]
+authors = ["Ettore Caputo <ettore.caputo27@gmail.com>"]
 license = "MIT"
 readme = "README.md"
 keywords = ["streamlit", "text", "annotation", "nlp", "argument mining", "annotator"]
@@ -18,7 +18,4 @@ streamlit = "^1.21.0"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
-
-[project.urls]
-Homepage = "https://github.com/EttoreCaputo/streamlit-annotator"
 
