@@ -18,7 +18,6 @@ jsonschema==4.20.0 ; python_version >= "3.8" and python_full_version != "3.9.7" 
 markdown-it-py==3.0.0 ; python_version >= "3.8" and python_full_version != "3.9.7" and python_full_version < "4.0.0"
 markupsafe==2.1.3 ; python_version >= "3.8" and python_full_version != "3.9.7" and python_full_version < "4.0.0"
 mdurl==0.1.2 ; python_version >= "3.8" and python_full_version != "3.9.7" and python_full_version < "4.0.0"
-numpy==1.24.4 ; python_version >= "3.8" and python_full_version != "3.9.7" and python_full_version < "4.0.0"
 packaging==23.2 ; python_version >= "3.8" and python_full_version != "3.9.7" and python_full_version < "4.0.0"
 pandas==2.0.3 ; python_version >= "3.8" and python_full_version != "3.9.7" and python_full_version < "4.0.0"
 pillow==10.1.0 ; python_version >= "3.8" and python_full_version != "3.9.7" and python_full_version < "4.0.0"
@@ -47,4 +46,4 @@ urllib3==2.1.0 ; python_version >= "3.8" and python_full_version != "3.9.7" and 
 validators==0.22.0 ; python_version >= "3.8" and python_full_version != "3.9.7" and python_full_version < "4.0.0"
 watchdog==3.0.0 ; python_version >= "3.8" and python_full_version != "3.9.7" and python_full_version < "4.0.0" and platform_system != "Darwin"
 zipp==3.17.0 ; python_version >= "3.8" and python_full_version != "3.9.7" and python_full_version < "4.0.0"
-streamlit-annotation-tools
+numpy
