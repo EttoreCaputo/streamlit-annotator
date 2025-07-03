@@ -69,6 +69,7 @@ export const reducer = (state: IState, action: IAction): IState => {
       const actual_text: JSX.Element[] = []
       let start = 0
       let selectedLabel = state.selectedLabel
+      const showAllAnnotations = action.payload?.showAllAnnotations
 
       if (!selectedLabel) {
         if (Object.keys(labels).length > 0) {
@@ -85,28 +86,41 @@ export const reducer = (state: IState, action: IAction): IState => {
         selectedLabel = Object.keys(labels)[Object.keys(labels).length - 1]
       }
 
-      labels[selectedLabel]
-        ?.sort((a, b) => a.start - b.start)
-        .forEach((label, index) => {
-          actual_text.push(
-            <span key={`unlabeled-${index}`}>
-              {text.substring(start, label.start)}
-            </span>
-          )
-          actual_text.push(
-            <span
-              key={`labeled-${index}`}
-              className="labeled border rounded"
-              style={{
-                backgroundColor: hexToRgba(getColor(selectedLabel), 0.2), 
-                borderColor: getColor(selectedLabel),
-              }}
-            >
-              {text.substring(label.start, label.end)}
-            </span>
-          )
-          start = label.end
+      // Get all annotations if showAllAnnotations is true, otherwise just the selected label's annotations
+      let allAnnotations: { start: number; end: number; label: string; labelClass: string }[] = []
+      
+      if (showAllAnnotations) {
+        Object.entries(labels).forEach(([labelClass, annotations]) => {
+          allAnnotations.push(...annotations.map(ann => ({ ...ann, labelClass })))
         })
+      } else {
+        allAnnotations = labels[selectedLabel]?.map(ann => ({ ...ann, labelClass: selectedLabel })) || []
+      }
+
+      // Sort all annotations by start position
+      allAnnotations.sort((a, b) => a.start - b.start)
+
+      allAnnotations.forEach((annotation, index) => {
+        actual_text.push(
+          <span key={`unlabeled-${index}`}>
+            {text.substring(start, annotation.start)}
+          </span>
+        )
+        actual_text.push(
+          <span
+            key={`labeled-${index}`}
+            className="labeled border rounded"
+            style={{
+              backgroundColor: hexToRgba(getColor(annotation.labelClass), 0.2),
+              borderColor: getColor(annotation.labelClass),
+            }}
+          >
+            {text.substring(annotation.start, annotation.end)}
+          </span>
+        )
+        start = annotation.end
+      })
+
       actual_text.push(
         <span key="unlabeled-end">{text.substring(start)}</span>
       )

@@ -14,7 +14,7 @@ else:
     _component = components.declare_component("st_annotator", path=build_dir)
 
 
-def text_annotator(text: str, labels=[], in_snake_case=False, show_label_input=True, colors={}):
+def text_annotator(text: str, labels=[], in_snake_case=False, show_label_input=True, colors={}, key=None):
     """Create a new instance of "text_annotator".
 
     Parameters
@@ -49,6 +49,11 @@ def text_annotator(text: str, labels=[], in_snake_case=False, show_label_input=T
         A dictionary of colors for the labels. The keys are the labels and the values are the colors in hex format.
         There is a special key "label_input" that is used to color the input textbox.
 
+    key : str or None
+        An optional string to use as the unique key for the widget.
+        If this is None, and the widget's arguments are changed, 
+        the widget will be recreated.
+
     Returns
     -------
     list or None
@@ -76,7 +81,7 @@ def text_annotator(text: str, labels=[], in_snake_case=False, show_label_input=T
     # "default" is a special argument that specifies the initial return
     # value of the component before the user has interacted with it.
     component_value = _component(
-        text=text, labels=labels, in_snake_case=in_snake_case, show_label_input=show_label_input, colors=colors, mode="text_annotator"
+        text=text, labels=labels, in_snake_case=in_snake_case, show_label_input=show_label_input, colors=colors, mode="text_annotator", key=key
     )
 
     # We could modify the value returned from the component if we wanted.
@@ -113,7 +118,7 @@ if __name__ == "__main__":
 
         # Example with label input visible (default)
         st.subheader("Annotator with input textbox (default)")
-        labels_with_input = text_annotator(text, labels, in_snake_case=False)
+        labels_with_input = text_annotator(text, labels, in_snake_case=False, key="annotator_with_input")
 
         st.write("Labels (with input):")
         st.write(labels_with_input)
@@ -121,7 +126,8 @@ if __name__ == "__main__":
         # Example with label input hidden
         st.subheader("Annotator without input textbox and custom colors")
         labels_without_input = text_annotator(text, labels, in_snake_case=False, show_label_input=False,
-                                            colors={"Major Claim": "#a457d7", "Claim": "#3478f6", "Premise": "#5ac4be"})
+                                            colors={"Major Claim": "#a457d7", "Claim": "#3478f6", "Premise": "#5ac4be"},
+                                            key="annotator_without_input")
 
         st.write("Labels (without input):")
         st.write(labels_without_input)
@@ -131,7 +137,8 @@ if __name__ == "__main__":
         # Example with label input hidden
         st.subheader("Annotator with custom colors")
         labels_with_input_and_colors = text_annotator(text, labels, in_snake_case=False, show_label_input=True,
-                                            colors={"label_input":"#ff9500", "Major Claim": "#a457d7", "Claim": "#3478f6", "Premise": "#5ac4be"})
+                                            colors={"label_input":"#ff9500", "Major Claim": "#a457d7", "Claim": "#3478f6", "Premise": "#5ac4be"},
+                                            key="annotator_with_colors")
         st.write("Labels (colors):")
         st.write(labels_with_input_and_colors)
     annotator_page()

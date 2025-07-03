@@ -10,20 +10,15 @@ Based on the original project [Streamlit Annotation Tools](https://github.com/st
 [![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://app-annotator.streamlit.app)
 
 ## New Features
-- Custom colors to the labels
-- Input textbox visible or hidden
+- Key parameter to text_annotator function
+- A special button to show all the annotations together
 
-## Removed Features
-- Highlighter tool
-
-## Annotator with input textbox (default)
-![](docs/ann_default.gif)
-
-## Annotator without input textbox and custom colors
+## Animated Examples
 ![](docs/ann_without_input.gif)
 
-## Annotator with custom colors
 ![](docs/ann_with_custom_colors.gif)
+
+![](docs/show_all_button.gif)
 
 # Install
 

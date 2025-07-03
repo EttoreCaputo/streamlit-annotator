@@ -8,6 +8,7 @@ import { adjustSelectionBounds, getCharactersCountUntilNode, isLabeled, removeLa
 const Annotator: React.FC = () => {
   const { args } = useRenderData()
   const [labelName, setLabelName] = useState<string>("")
+  const [showAnnotations, setShowAnnotations] = useState<boolean>(true)
   const [state, dispatch] = useReducer<React.Reducer<IState, IAction>>(
     reducer,
     initialState
@@ -17,7 +18,7 @@ const Annotator: React.FC = () => {
     const fetchData = async () => {
       const { text, labels, in_snake_case, show_label_input, colors } = args
       dispatch({ type: ActionTypes.SET_TEXT_LABELS, payload: { text, labels, in_snake_case, show_label_input, colors } })
-      dispatch({ type: ActionTypes.RENDER_TEXT })
+      dispatch({ type: ActionTypes.RENDER_TEXT, payload: { showAllAnnotations: showAnnotations } })
       Streamlit.setComponentValue(labels)
     }
 
@@ -25,8 +26,8 @@ const Annotator: React.FC = () => {
   }, [])
 
   useEffect(() => {
-    dispatch({ type: ActionTypes.RENDER_TEXT })
-  }, [state.labels, state.selectedLabel])
+    dispatch({ type: ActionTypes.RENDER_TEXT, payload: { showAllAnnotations: showAnnotations } })
+  }, [state.labels, state.selectedLabel, showAnnotations])
 
   const handleMouseUp = useCallback(async () => {
     if (!state.selectedLabel) return
@@ -50,14 +51,16 @@ const Annotator: React.FC = () => {
         const newLabels = { ...state.labels };
         newLabels[state.selectedLabel] = labels;
         dispatch({ type: ActionTypes.SET_TEXT_LABELS, payload: { text: state.text, labels: newLabels, in_snake_case: state.in_snake_case, show_label_input: state.show_label_input, colors: state.colors } });
+        dispatch({ type: ActionTypes.RENDER_TEXT, payload: { showAllAnnotations: showAnnotations } });
       } else {
         const label = { start, end, label: selectedText };
         const newLabels = { ...state.labels };
         newLabels[state.selectedLabel] = [...newLabels[state.selectedLabel], label];
         dispatch({ type: ActionTypes.SET_TEXT_LABELS, payload: { text: state.text, labels: newLabels, in_snake_case: state.in_snake_case, show_label_input: state.show_label_input, colors: state.colors } });
+        dispatch({ type: ActionTypes.RENDER_TEXT, payload: { showAllAnnotations: showAnnotations } });
       }
     }
-  }, [state, dispatch]);
+  }, [state, dispatch, showAnnotations]);
 
   const addLabel = (name: string) => {
     if (name.trim() === "") return
@@ -147,6 +150,33 @@ const Annotator: React.FC = () => {
             )}
           </span>);
 })}
+        
+        <div className="mx-2"></div>
+        
+        <div 
+          className={
+            "flex items-center cursor-pointer py-1 px-3 mr-2 mb-2 rounded-lg text-base border" +
+            (showAnnotations
+              ? " text-white"
+              : " border-primary text-primary hover:bg-primary hover:text-white")
+          }
+          style={
+            showAnnotations
+              ? { backgroundColor: getColor(null), borderColor: getColor(null) }
+              : { borderColor: getColor(null) }
+          }
+        >
+          <input
+            type="checkbox"
+            id="show-annotations"
+            checked={showAnnotations}
+            onChange={(e) => setShowAnnotations(e.target.checked)}
+            className="hidden"
+          />
+          <label htmlFor="show-annotations" className="cursor-pointer">
+            Show All
+          </label>
+        </div>
       </div>
       <div id="actual-text" className="mt-5 h-full" onMouseUp={handleMouseUp}>
         {state.actual_text}

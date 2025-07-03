@@ -27,7 +27,7 @@ def annotator_page():
 
     # Example with label input visible (default)
     st.subheader("Annotator with input textbox (default)")
-    labels_with_input = text_annotator(text, labels, in_snake_case=False)
+    labels_with_input = text_annotator(text, labels, in_snake_case=False, key="annotator_with_input")
 
     st.write("Labels (with input):")
     st.write(labels_with_input)
@@ -35,7 +35,8 @@ def annotator_page():
     # Example with label input hidden
     st.subheader("Annotator without input textbox and custom colors")
     labels_without_input = text_annotator(text, labels, in_snake_case=False, show_label_input=False,
-                                        colors={"Major Claim": "#a457d7", "Claim": "#3478f6", "Premise": "#5ac4be"})
+                                        colors={"Major Claim": "#a457d7", "Claim": "#3478f6", "Premise": "#5ac4be"},
+                                        key="annotator_without_input")
 
     st.write("Labels (without input):")
     st.write(labels_without_input)
@@ -45,7 +46,8 @@ def annotator_page():
     # Example with label input hidden
     st.subheader("Annotator with custom colors")
     labels_with_input_and_colors = text_annotator(text, labels, in_snake_case=False, show_label_input=True,
-                                        colors={"label_input":"#ff9500", "Major Claim": "#a457d7", "Claim": "#3478f6", "Premise": "#5ac4be"})
+                                        colors={"label_input":"#ff9500", "Major Claim": "#a457d7", "Claim": "#3478f6", "Premise": "#5ac4be"},
+                                        key="annotator_with_colors")
     st.write("Labels (colors):")
     st.write(labels_with_input_and_colors)
 
