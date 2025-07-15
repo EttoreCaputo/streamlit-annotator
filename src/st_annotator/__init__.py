@@ -14,7 +14,7 @@ else:
     _component = components.declare_component("st_annotator", path=build_dir)
 
 
-def text_annotator(text: str, labels=[], in_snake_case=False, show_label_input=True, colors={}, key=None):
+def text_annotator(text: str, labels=[], in_snake_case=False, show_label_input=True, colors={}, popup_delay=250, key=None):
     """Create a new instance of "text_annotator".
 
     Parameters
@@ -49,6 +49,9 @@ def text_annotator(text: str, labels=[], in_snake_case=False, show_label_input=T
         A dictionary of colors for the labels. The keys are the labels and the values are the colors in hex format.
         There is a special key "label_input" that is used to color the input textbox.
 
+    popup_delay : int
+        The delay in milliseconds before showing the annotation popup when hovering over an annotation. Default is 250ms.
+
     key : str or None
         An optional string to use as the unique key for the widget.
         If this is None, and the widget's arguments are changed, 
@@ -81,7 +84,7 @@ def text_annotator(text: str, labels=[], in_snake_case=False, show_label_input=T
     # "default" is a special argument that specifies the initial return
     # value of the component before the user has interacted with it.
     component_value = _component(
-        text=text, labels=labels, in_snake_case=in_snake_case, show_label_input=show_label_input, colors=colors, mode="text_annotator", key=key
+        text=text, labels=labels, in_snake_case=in_snake_case, show_label_input=show_label_input, colors=colors, popup_delay=popup_delay, mode="text_annotator", key=key
     )
 
     # We could modify the value returned from the component if we wanted.
@@ -101,18 +104,91 @@ if __name__ == "__main__":
 
         labels = {
             "Major Claim": [
-                {"start": 1467, "end": 1572, "label": "I would rather classify myself in the proponents of globalization as a speeding factor of global progress"}
+                {
+                    "start": 1467, 
+                    "end": 1572, 
+                    "label": "I would rather classify myself in the proponents of globalization as a speeding factor of global progress",
+                    "metadata": {
+                        "confidence": 0.95,
+                        "author": "Student",
+                        "stance": "Pro-globalization",
+                        "argumentType": "Personal position"
+                    }
+                }
             ],
             "Claim": [
-                {"start": 330, "end": 445, "label": "Some people prefer to recognize globalization as a threat to ethnic and religious values of people of their country"},
-                {"start": 686, "end": 777, "label": "globalization contribute effectively to the global improvement of the world in many aspects"},
-                {"start": 1256, "end": 1320, "label": "globalization results in considerable decrease in global tension"}
+                {
+                    "start": 330, 
+                    "end": 445, 
+                    "label": "Some people prefer to recognize globalization as a threat to ethnic and religious values of people of their country",
+                    "metadata": {
+                        "confidence": 0.88,
+                        "tone": "Negative",
+                        "perspective": "Cultural preservationist"
+                    }
+                },
+                {
+                    "start": 686, 
+                    "end": 777, 
+                    "label": "globalization contribute effectively to the global improvement of the world in many aspects",
+                    "metadata": {
+                        "confidence": 0.92,
+                        "tone": "Positive",
+                        "scope": "Global"
+                    }
+                },
+                {
+                    "start": 1256, 
+                    "end": 1320, 
+                    "label": "globalization results in considerable decrease in global tension",
+                    "metadata": {
+                        "confidence": 0.85,
+                        "topic": "International relations",
+                        "evidenceType": "Predicted outcome"
+                    }
+                }
             ],
             "Premise": [
-                {"start": 477, "end": 636, "label": "the idea of globalization put their inherited culture in danger of uncontrolled change and make them vulnerable against the attack of imperialistic governments"},
-                {"start": 793, "end": 980, "label": "Developing globalization , people can have more access to many natural resources of the world and it leads to increasing the pace of scientific and economic promotions of the entire world"},
-                {"start": 1010, "end": 1182, "label": "they admit that globalization can be considered a chance for people of each country to promote their lifestyle through the stuffs and services imported from other countries"},
-                {"start": 1341, "end": 1435, "label": "convergence of benefits of people of the world which is a natural consequence of globalization"}
+                {
+                    "start": 477, 
+                    "end": 636, 
+                    "label": "the idea of globalization put their inherited culture in danger of uncontrolled change and make them vulnerable against the attack of imperialistic governments",
+                    "metadata": {
+                        "confidence": 0.80,
+                        "concern": "Cultural preservation",
+                        "threat": "Imperialism"
+                    }
+                },
+                {
+                    "start": 793, 
+                    "end": 980, 
+                    "label": "Developing globalization , people can have more access to many natural resources of the world and it leads to increasing the pace of scientific and economic promotions of the entire world",
+                    "metadata": {
+                        "confidence": 0.90,
+                        "benefits": ["Resource access", "Scientific progress", "Economic growth"],
+                        "scope": "Worldwide"
+                    }
+                },
+                {
+                    "start": 1010, 
+                    "end": 1182, 
+                    "label": "they admit that globalization can be considered a chance for people of each country to promote their lifestyle through the stuffs and services imported from other countries",
+                    "metadata": {
+                        "confidence": 0.83,
+                        "focus": "Lifestyle improvement",
+                        "mechanism": "Import of goods and services"
+                    }
+                },
+                {
+                    "start": 1341, 
+                    "end": 1435, 
+                    "label": "convergence of benefits of people of the world which is a natural consequence of globalization",
+                    "metadata": {
+                        "confidence": 0.87,
+                        "concept": "Benefit convergence",
+                        "causality": "Natural consequence"
+                    }
+                }
             ]
         }
 
@@ -141,4 +217,13 @@ if __name__ == "__main__":
                                             key="annotator_with_colors")
         st.write("Labels (colors):")
         st.write(labels_with_input_and_colors)
+
+        # Example with custom popup delay
+        st.subheader("Annotator with custom popup delay")
+        labels_with_delay = text_annotator(text, labels, in_snake_case=False, show_label_input=True,
+                                        colors={"Major Claim": "#a457d7", "Claim": "#3478f6", "Premise": "#5ac4be"},
+                                        popup_delay=500,  # 500ms delay instead of default 250ms
+                                        key="annotator_with_delay")
+        st.write("Labels (500ms popup delay):")
+        st.write(labels_with_delay)
     annotator_page()

@@ -10,6 +10,25 @@ export type ILabel = {
     start: number;
     end: number;
     label: string;
+    metadata?: { [key: string]: any }; // Additional metadata
+}
+
+// Tipo per i dati del popup dell'annotazione
+export interface AnnotationPopupData {
+    text: string;
+    labelClass: string;
+    startIndex: number;
+    endIndex: number;
+    metadata?: { [key: string]: any }; // Additional metadata
+    transformX?: string; // CSS horizontal transformation for positioning
+    transformY?: string; // CSS vertical transformation for positioning
+    maxHeight?: number; // Maximum height of the popup in pixels
+}
+
+// Tipo per i callback del popup
+export interface PopupCallbacks {
+    showPopup: (event: React.MouseEvent, data: AnnotationPopupData) => void;
+    hidePopup: () => void;
 }
 
 export interface IState {

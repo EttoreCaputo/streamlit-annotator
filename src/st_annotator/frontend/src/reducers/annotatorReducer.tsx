@@ -1,5 +1,5 @@
 import { Streamlit } from "streamlit-component-lib"
-import { ActionTypes, IAction, IState } from "../types/annotatorTypes"
+import { ActionTypes, IAction, IState, AnnotationPopupData, PopupCallbacks } from "../types/annotatorTypes"
 import React from "react"
 import { formatKeys } from "../helpers/annotatorHelpers"
 
@@ -70,6 +70,7 @@ export const reducer = (state: IState, action: IAction): IState => {
       let start = 0
       let selectedLabel = state.selectedLabel
       const showAllAnnotations = action.payload?.showAllAnnotations
+      const popupCallbacks: PopupCallbacks | undefined = action.payload?.popupCallbacks
 
       if (!selectedLabel) {
         if (Object.keys(labels).length > 0) {
@@ -87,7 +88,7 @@ export const reducer = (state: IState, action: IAction): IState => {
       }
 
       // Get all annotations if showAllAnnotations is true, otherwise just the selected label's annotations
-      let allAnnotations: { start: number; end: number; label: string; labelClass: string }[] = []
+      let allAnnotations: { start: number; end: number; label: string; labelClass: string; metadata?: { [key: string]: any } }[] = []
       
       if (showAllAnnotations) {
         Object.entries(labels).forEach(([labelClass, annotations]) => {
@@ -106,14 +107,26 @@ export const reducer = (state: IState, action: IAction): IState => {
             {text.substring(start, annotation.start)}
           </span>
         )
+        
+        // Create the popup data for this annotation
+        const annotationPopupData: AnnotationPopupData = {
+          text: annotation.label,
+          labelClass: annotation.labelClass,
+          startIndex: annotation.start,
+          endIndex: annotation.end,
+          metadata: annotation.metadata // Include metadata if present
+        };
+
         actual_text.push(
           <span
             key={`labeled-${index}`}
-            className="labeled border rounded"
+            className="labeled border rounded cursor-pointer"
             style={{
               backgroundColor: hexToRgba(getColor(annotation.labelClass), 0.2),
               borderColor: getColor(annotation.labelClass),
             }}
+            onMouseEnter={popupCallbacks ? (e) => popupCallbacks.showPopup(e, annotationPopupData) : undefined}
+            onMouseLeave={popupCallbacks ? popupCallbacks.hidePopup : undefined}
           >
             {text.substring(annotation.start, annotation.end)}
           </span>

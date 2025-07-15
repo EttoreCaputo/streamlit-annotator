@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "st-annotator"
-version = "0.0.2"
+version = "0.0.3"
 description = "Component for annotating text for Argument Mining and NLP resolution"
 classifiers = ["Programming Language :: Python :: 3", "License :: OSI Approved :: MIT License", "Operating System :: OS Independent"]
 authors = ["Ettore Caputo <ettore.caputo27@gmail.com>"]
