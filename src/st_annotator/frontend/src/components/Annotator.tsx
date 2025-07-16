@@ -423,7 +423,7 @@ const Annotator: React.FC = () => {
             <div className="font-semibold text-gray-800 mb-2">Annotation Details</div>
             <div className="space-y-1">
               <div>
-                <span className="font-medium text-gray-600">Testo:</span>{' '}
+                <span className="font-medium text-gray-600">Text:</span>{' '}
                 <span className="text-gray-800">"{popupData.text}"</span>
               </div>
               <div>

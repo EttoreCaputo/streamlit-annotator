@@ -15,7 +15,7 @@
 
 **Try the demo on Streamlit Cloud:**
 
-[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://app-annotator.streamlit.app)
+[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://st-annotator.streamlit.app)
 
 </td>
 </tr>
