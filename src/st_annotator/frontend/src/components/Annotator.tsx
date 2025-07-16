@@ -442,14 +442,14 @@ const Annotator: React.FC = () => {
                 </span>
               </div>
               {/* Show additional metadata if present */}
-              {popupData.metadata && Object.keys(popupData.metadata).length > 0 && (
+              {popupData.metadata && typeof popupData.metadata === 'object' && Object.keys(popupData.metadata).length > 0 && (
                 <div className="mt-2 pt-2 border-t border-gray-200">
                   <div className="font-medium text-gray-600 mb-1">Additional Information:</div>
                   {Object.entries(popupData.metadata).map(([key, value]) => (
                     <div key={key} className="text-sm">
                       <span className="font-medium text-gray-500 capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}:</span>{' '}
                       <span className="text-gray-700">
-                        {typeof value === 'object' ? JSON.stringify(value) : String(value)}
+                        {typeof value === 'object' && value !== null ? JSON.stringify(value) : String(value)}
                       </span>
                     </div>
                   ))}
