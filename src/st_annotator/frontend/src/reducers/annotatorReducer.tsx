@@ -53,19 +53,18 @@ export const reducer = (state: IState, action: IAction): IState => {
 
   switch (action.type) {
     case ActionTypes.SET_TEXT_LABELS:
-      Streamlit.setComponentValue(formatKeys(action.payload.labels, action.payload.in_snake_case))
-
+      const { text, labels, in_snake_case, show_label_input, colors } = action.payload;
+      Streamlit.setComponentValue(formatKeys(labels, in_snake_case))
       return {
         ...state,
-        in_snake_case: action.payload.in_snake_case,
-        show_label_input: action.payload.show_label_input,
-        text: action.payload.text,
-        labels: action.payload.labels,
-        colors: action.payload.colors,
-      }
+        text,
+        labels: labels || {},
+        in_snake_case,
+        show_label_input,
+        colors,
+      };
 
     case ActionTypes.RENDER_TEXT:
-      const { text, labels } = state
       const actual_text: JSX.Element[] = []
       let start = 0
       let selectedLabel = state.selectedLabel
@@ -73,29 +72,29 @@ export const reducer = (state: IState, action: IAction): IState => {
       const popupCallbacks: PopupCallbacks | undefined = action.payload?.popupCallbacks
 
       if (!selectedLabel) {
-        if (Object.keys(labels).length > 0) {
-          selectedLabel = Object.keys(labels)[0]
+        if (state.labels && Object.keys(state.labels).length > 0) {
+          selectedLabel = Object.keys(state.labels)[0]
         } else {
           return {
             ...state,
-            actual_text: [<p key={"default-text"}>{text}</p>]
+            actual_text: [<p key={"default-text"}>{state.text}</p>]
           }
         }
       }
 
-      if (!labels[selectedLabel]) {
-        selectedLabel = Object.keys(labels)[Object.keys(labels).length - 1]
+      if (!state.labels[selectedLabel]) {
+        selectedLabel = Object.keys(state.labels)[Object.keys(state.labels).length - 1]
       }
 
       // Get all annotations if showAllAnnotations is true, otherwise just the selected label's annotations
       let allAnnotations: { start: number; end: number; label: string; labelClass: string; metadata?: { [key: string]: any } }[] = []
       
       if (showAllAnnotations) {
-        Object.entries(labels).forEach(([labelClass, annotations]) => {
-          allAnnotations.push(...annotations.map(ann => ({ ...ann, labelClass })))
+        Object.entries(state.labels).forEach(([labelClass, annotations]) => {
+            allAnnotations.push(...annotations.map(ann => ({ ...ann, labelClass })))
         })
       } else {
-        allAnnotations = labels[selectedLabel]?.map(ann => ({ ...ann, labelClass: selectedLabel })) || []
+        allAnnotations = state.labels[selectedLabel]?.map(ann => ({ ...ann, labelClass: selectedLabel })) || []
       }
 
       // Sort all annotations by start position
@@ -104,13 +103,13 @@ export const reducer = (state: IState, action: IAction): IState => {
       allAnnotations.forEach((annotation, index) => {
         actual_text.push(
           <span key={`unlabeled-${index}`}>
-            {text.substring(start, annotation.start)}
+            {state.text.substring(start, annotation.start)}
           </span>
         )
         
         // Create the popup data for this annotation
         const annotationPopupData: AnnotationPopupData = {
-          text: annotation.label,
+          text: state.text.substring(annotation.start, annotation.end),
           labelClass: annotation.labelClass,
           startIndex: annotation.start,
           endIndex: annotation.end,
@@ -125,19 +124,17 @@ export const reducer = (state: IState, action: IAction): IState => {
               backgroundColor: hexToRgba(getColor(annotation.labelClass), 0.2),
               borderColor: getColor(annotation.labelClass),
             }}
-            onMouseEnter={popupCallbacks ? (e) => popupCallbacks.showPopup(e, annotationPopupData) : undefined}
-            onMouseLeave={popupCallbacks ? popupCallbacks.hidePopup : undefined}
+            onContextMenu={popupCallbacks ? (e) => popupCallbacks.showPopup(e, annotationPopupData) : undefined}
           >
-            {text.substring(annotation.start, annotation.end)}
+            {state.text.substring(annotation.start, annotation.end)}
           </span>
         )
         start = annotation.end
       })
 
       actual_text.push(
-        <span key="unlabeled-end">{text.substring(start)}</span>
+        <span key="unlabeled-end">{state.text.substring(start)}</span>
       )
-      Streamlit.setComponentValue(formatKeys(labels, state.in_snake_case))
       return {
         ...state,
         actual_text,

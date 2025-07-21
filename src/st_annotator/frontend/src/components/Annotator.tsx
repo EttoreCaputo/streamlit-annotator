@@ -19,8 +19,11 @@ const Annotator: React.FC = () => {
   const [popupVisible, setPopupVisible] = useState<boolean>(false)
   const [popupPosition, setPopupPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 })
   const [popupData, setPopupData] = useState<AnnotationPopupData | null>(null)
-  const [hidePopupTimeout, setHidePopupTimeout] = useState<NodeJS.Timeout | null>(null)
-  const [showPopupTimeout, setShowPopupTimeout] = useState<NodeJS.Timeout | null>(null)
+  
+  // States to manage the context menu
+  const [contextMenuVisible, setContextMenuVisible] = useState<boolean>(false)
+  const [contextMenuPosition, setContextMenuPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 })
+  const [contextMenuData, setContextMenuData] = useState<AnnotationPopupData | null>(null)
 
   // Create or get the portal container for the popup
   const getPopupPortalContainer = useCallback(() => {
@@ -35,183 +38,148 @@ const Annotator: React.FC = () => {
     return container;
   }, []);
 
-  // Functions to manage the annotation popup
-  const showAnnotationPopup = useCallback((event: React.MouseEvent, annotationData: AnnotationPopupData) => {
-    // Cancel any existing timeout to hide the popup
-    if (hidePopupTimeout) {
-      clearTimeout(hidePopupTimeout);
-      setHidePopupTimeout(null);
-    }
-
-    // If there is already a timeout to show the popup, don't create another one
-    if (showPopupTimeout) {
-      return;
-    }
-
-    // Calculate the position and data of the popup
-    const calculatePopupData = () => {
-      const rect = (event.target as HTMLElement).getBoundingClientRect();
-      const popupWidth = 300; // Maximum width of the popup
-      const maxPopupHeight = Math.min(400, window.innerHeight * 0.6); // Maximum height of the popup
-      const margin = 15; // Margin from the screen borders
-      
-      // Calculate the dimensions of the viewport
-      const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
-      const scrollY = window.scrollY;
-      
-      // Initial preferred position (centered above the element)
-      let x = rect.left + rect.width / 2;
-      let y = rect.top + scrollY - margin;
-      let transformX = '-50%'; // Centered horizontally
-      let transformY = '-100%'; // Above the element
-      
-      // Horizontal border check
-      const halfPopupWidth = popupWidth / 2;
-      
-      if (x - halfPopupWidth < margin) {
-        // Too far to the left, align the popup to the left margin
-        x = margin + halfPopupWidth;
-        transformX = '-50%';
-      } else if (x + halfPopupWidth > viewportWidth - margin) {
-        // Too far to the right, align the popup to the right margin
-        x = viewportWidth - margin - halfPopupWidth;
-        transformX = '-50%';
-      }
-      
-      // Vertical border check
-      const estimatedPopupHeight = maxPopupHeight; // Use the maximum height for calculations
-      
-      // First try above the element
-      const topPosition = y - estimatedPopupHeight;
-      const bottomPosition = rect.bottom + scrollY + margin;
-      
-      if (topPosition < scrollY + margin) {
-        // No space above, position below
-        if (bottomPosition + estimatedPopupHeight <= scrollY + viewportHeight - margin) {
-          // There is space below
-          y = bottomPosition;
-          transformY = '0%';
-        } else {
-          // No space above or below, position in the center of the viewport
-          y = scrollY + viewportHeight / 2;
-          transformY = '-50%';
-        }
-      } else {
-        // There is space above, keep the original position
-        transformY = '-100%';
-      }
-      
-      // Final check: ensure the popup stays in the viewport even with the transformation
-      const finalTop = y + (transformY === '-100%' ? -estimatedPopupHeight : 
-                            transformY === '-50%' ? -estimatedPopupHeight/2 : 0);
-      const finalBottom = finalTop + estimatedPopupHeight;
-      
-      if (finalTop < scrollY + margin) {
-        y = scrollY + margin + (transformY === '-100%' ? estimatedPopupHeight : 
-                               transformY === '-50%' ? estimatedPopupHeight/2 : 0);
-      } else if (finalBottom > scrollY + viewportHeight - margin) {
-        y = scrollY + viewportHeight - margin - estimatedPopupHeight + 
-            (transformY === '-100%' ? estimatedPopupHeight : 
-             transformY === '-50%' ? estimatedPopupHeight/2 : 0);
-      }
-      
-      return { 
-        position: { x, y }, 
-        data: { ...annotationData, transformX, transformY, maxHeight: maxPopupHeight } 
-      };
-    };
-
-    // Configurable delay before showing the popup
-    const timeout = setTimeout(() => {
-      const { position, data } = calculatePopupData();
-      setPopupPosition(position);
-      setPopupData(data);
-      setPopupVisible(true);
-      setShowPopupTimeout(null);
-    }, args.popup_delay || 250); // Use popup_delay from args, fallback to 250ms
+  // Function to handle right-click on annotations
+  const handleAnnotationRightClick = useCallback((event: React.MouseEvent, annotationData: AnnotationPopupData) => {
+    event.preventDefault(); // Prevent the default context menu
+    event.stopPropagation(); // Stop event from bubbling up
     
-    setShowPopupTimeout(timeout);
-  }, [hidePopupTimeout, showPopupTimeout, args.popup_delay]);
-
-  const hideAnnotationPopup = useCallback(() => {
-    // Cancel the show timeout if it exists (if the mouse exits before the popup appears)
-    if (showPopupTimeout) {
-      clearTimeout(showPopupTimeout);
-      setShowPopupTimeout(null);
-      return; // Don't show the popup if it hasn't appeared yet
+    // Clear any text selection to prevent interference with annotation logic
+    const selection = window.getSelection();
+    if (selection) {
+      selection.removeAllRanges();
     }
-
-    // If the popup is already visible, use a delay to hide it
-    const timeout = setTimeout(() => {
-      setPopupVisible(false);
-      setPopupData(null);
-      setHidePopupTimeout(null);
-    }, 150); // Delay of 150ms
     
-    setHidePopupTimeout(timeout);
-  }, [showPopupTimeout]);
-
-  const cancelHidePopup = useCallback(() => {
-    if (hidePopupTimeout) {
-      clearTimeout(hidePopupTimeout);
-      setHidePopupTimeout(null);
+    const rect = (event.target as HTMLElement).getBoundingClientRect();
+    const contextMenuWidth = 150;
+    const contextMenuHeight = 40;
+    const margin = 10;
+    
+    // Calculate position for context menu
+    let x = event.clientX;
+    let y = event.clientY;
+    
+    // Adjust if context menu would go outside viewport
+    if (x + contextMenuWidth > window.innerWidth - margin) {
+      x = window.innerWidth - contextMenuWidth - margin;
     }
-  }, [hidePopupTimeout]);
-
-  const forceHidePopup = useCallback(() => {
-    // Cancel both timeouts
-    if (hidePopupTimeout) {
-      clearTimeout(hidePopupTimeout);
-      setHidePopupTimeout(null);
+    if (y + contextMenuHeight > window.innerHeight - margin) {
+      y = window.innerHeight - contextMenuHeight - margin;
     }
-    if (showPopupTimeout) {
-      clearTimeout(showPopupTimeout);
-      setShowPopupTimeout(null);
-    }
+    
+    setContextMenuPosition({ x, y });
+    setContextMenuData(annotationData);
+    setContextMenuVisible(true);
+    
+    // Hide popup if it's visible
     setPopupVisible(false);
     setPopupData(null);
-  }, [hidePopupTimeout, showPopupTimeout]);
+  }, []);
 
-  // Handle the click outside the popup to close it
-  const handleClickOutside = useCallback((event: MouseEvent) => {
-    const popup = document.querySelector('#annotation-popup');
-    if (popup && !popup.contains(event.target as Node)) {
-      forceHidePopup();
+  // Function to show the popup from context menu
+  const showPopupFromContextMenu = useCallback(() => {
+    if (!contextMenuData) return;
+    
+    const popupWidth = 300;
+    const maxPopupHeight = Math.min(400, window.innerHeight * 0.6);
+    const margin = 15;
+    
+    // Use the context menu position as a starting point
+    let x = contextMenuPosition.x;
+    let y = contextMenuPosition.y;
+    let transformX = '0%';
+    let transformY = '0%';
+    
+    // Adjust horizontal position
+    if (x + popupWidth > window.innerWidth - margin) {
+      x = window.innerWidth - popupWidth - margin;
     }
-  }, [forceHidePopup]);
+    
+    // Adjust vertical position
+    if (y + maxPopupHeight > window.innerHeight - margin) {
+      y = y - maxPopupHeight - 10; // Position above the context menu
+      transformY = '0%';
+    }
+    
+    setPopupPosition({ x, y });
+    setPopupData({ 
+      ...contextMenuData, 
+      transformX, 
+      transformY, 
+      maxHeight: maxPopupHeight 
+    });
+    setPopupVisible(true);
+    
+    // Hide context menu
+    setContextMenuVisible(false);
+    setContextMenuData(null);
+    
+    // Clear any text selection when showing popup
+    const selection = window.getSelection();
+    if (selection) {
+      selection.removeAllRanges();
+    }
+  }, [contextMenuData, contextMenuPosition]);
 
-  // Cleanup the portal container and the timeouts when the component is unmounted
+  // Function to hide context menu
+  const hideContextMenu = useCallback(() => {
+    setContextMenuVisible(false);
+    setContextMenuData(null);
+    
+    // Clear any text selection when hiding context menu
+    const selection = window.getSelection();
+    if (selection) {
+      selection.removeAllRanges();
+    }
+  }, []);
+
+  // Function to hide popup
+  const hidePopup = useCallback(() => {
+    setPopupVisible(false);
+    setPopupData(null);
+  }, []);
+
+  // Handle clicks outside context menu and popup
+  const handleClickOutside = useCallback((event: MouseEvent) => {
+    const contextMenu = document.querySelector('#annotation-context-menu');
+    const popup = document.querySelector('#annotation-popup');
+    
+    if (contextMenu && !contextMenu.contains(event.target as Node)) {
+      hideContextMenu();
+    }
+    
+    if (popup && !popup.contains(event.target as Node)) {
+      hidePopup();
+    }
+  }, [hideContextMenu, hidePopup]);
+
+  // Cleanup the portal container when the component is unmounted
   useEffect(() => {
     return () => {
-      if (hidePopupTimeout) {
-        clearTimeout(hidePopupTimeout);
-      }
-      if (showPopupTimeout) {
-        clearTimeout(showPopupTimeout);
-      }
       const container = document.getElementById('streamlit-annotator-popup-portal');
       if (container) {
         document.body.removeChild(container);
       }
     };
-  }, [hidePopupTimeout, showPopupTimeout]);
+  }, []);
 
-  // Add event listener to close the popup when clicking outside
+  // Add event listener to close menus when clicking outside
   useEffect(() => {
-    if (popupVisible) {
+    if (contextMenuVisible || popupVisible) {
       document.addEventListener('mousedown', handleClickOutside);
       return () => {
         document.removeEventListener('mousedown', handleClickOutside);
       };
     }
-  }, [popupVisible, handleClickOutside]);
+  }, [contextMenuVisible, popupVisible, handleClickOutside]);
 
-  // Hide the popup when scrolling
+  // Hide menus when scrolling
   useEffect(() => {
     const handleScroll = () => {
+      if (contextMenuVisible) {
+        hideContextMenu();
+      }
       if (popupVisible) {
-        forceHidePopup();
+        hidePopup();
       }
     };
 
@@ -219,31 +187,30 @@ const Annotator: React.FC = () => {
     return () => {
       window.removeEventListener('scroll', handleScroll);
     };
-  }, [popupVisible, forceHidePopup]);
+  }, [contextMenuVisible, popupVisible, hideContextMenu, hidePopup]);
 
   useEffect(() => {
     const fetchData = async () => {
       const { text, labels, in_snake_case, show_label_input, colors } = args
       dispatch({ type: ActionTypes.SET_TEXT_LABELS, payload: { text, labels, in_snake_case, show_label_input, colors } })
-      dispatch({ type: ActionTypes.RENDER_TEXT, payload: { 
-        showAllAnnotations: showAnnotations,
-        popupCallbacks: { showPopup: showAnnotationPopup, hidePopup: hideAnnotationPopup }
-      } })
-      Streamlit.setComponentValue(labels)
     }
 
     fetchData()
-  }, [args, showAnnotations, showAnnotationPopup, hideAnnotationPopup])
+  }, [args])
 
   useEffect(() => {
     dispatch({ type: ActionTypes.RENDER_TEXT, payload: { 
       showAllAnnotations: showAnnotations,
-      popupCallbacks: { showPopup: showAnnotationPopup, hidePopup: hideAnnotationPopup }
+      popupCallbacks: { showPopup: handleAnnotationRightClick, hidePopup: () => {} }
     } })
-  }, [state.labels, state.selectedLabel, showAnnotations, showAnnotationPopup, hideAnnotationPopup])
+  }, [state.labels, state.selectedLabel, showAnnotations, handleAnnotationRightClick])
 
   const handleMouseUp = useCallback(async () => {
     if (!state.selectedLabel) return
+    
+    // Don't process mouse up events when context menu is visible
+    if (contextMenuVisible) return
+    
     const selection = document.getSelection()?.getRangeAt(0);
 
     if (selection && selection.toString().trim() !== "") {
@@ -264,22 +231,14 @@ const Annotator: React.FC = () => {
         const newLabels = { ...state.labels };
         newLabels[state.selectedLabel] = labels;
         dispatch({ type: ActionTypes.SET_TEXT_LABELS, payload: { text: state.text, labels: newLabels, in_snake_case: state.in_snake_case, show_label_input: state.show_label_input, colors: state.colors } });
-        dispatch({ type: ActionTypes.RENDER_TEXT, payload: { 
-          showAllAnnotations: showAnnotations,
-          popupCallbacks: { showPopup: showAnnotationPopup, hidePopup: hideAnnotationPopup }
-        } });
       } else {
         const label = { start, end, label: selectedText };
         const newLabels = { ...state.labels };
         newLabels[state.selectedLabel] = [...newLabels[state.selectedLabel], label];
         dispatch({ type: ActionTypes.SET_TEXT_LABELS, payload: { text: state.text, labels: newLabels, in_snake_case: state.in_snake_case, show_label_input: state.show_label_input, colors: state.colors } });
-        dispatch({ type: ActionTypes.RENDER_TEXT, payload: { 
-          showAllAnnotations: showAnnotations,
-          popupCallbacks: { showPopup: showAnnotationPopup, hidePopup: hideAnnotationPopup }
-        } });
       }
     }
-  }, [state, dispatch, showAnnotations, showAnnotationPopup, hideAnnotationPopup]);
+  }, [state, dispatch, contextMenuVisible]);
 
   const addLabel = (name: string) => {
     if (name.trim() === "") return
@@ -307,7 +266,7 @@ const Annotator: React.FC = () => {
     return color;
   };
 
-  const primaryColor = getTailwindColor("bg-primary");
+  const primaryColor = getTailwindColor("bg-primary"); 
 
   const getColor = (label: string | undefined | null) => {
     if (!label || typeof label !== "string") return primaryColor;
@@ -416,8 +375,6 @@ const Annotator: React.FC = () => {
             zIndex: 10000,
             overflowY: 'auto' // Add vertical scroll if necessary
           }}
-          onMouseEnter={cancelHidePopup} // Cancel the timeout when the mouse enters the popup
-          onMouseLeave={hideAnnotationPopup} // Start the timeout when the mouse exits the popup
         >
           <div className="p-3">
             <div className="font-semibold text-gray-800 mb-2">Annotation Details</div>
@@ -445,7 +402,7 @@ const Annotator: React.FC = () => {
               {popupData.metadata && Object.keys(popupData.metadata).length > 0 && (
                 <div className="mt-2 pt-2 border-t border-gray-200">
                   <div className="font-medium text-gray-600 mb-1">Additional Information:</div>
-                  {Object.entries(popupData.metadata).map(([key, value]) => (
+                  {popupData.metadata && Object.entries(popupData.metadata).map(([key, value]) => (
                     <div key={key} className="text-sm">
                       <span className="font-medium text-gray-500 capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}:</span>{' '}
                       <span className="text-gray-700">
@@ -456,6 +413,29 @@ const Annotator: React.FC = () => {
                 </div>
               )}
             </div>
+          </div>
+        </div>,
+        getPopupPortalContainer()
+      )}
+
+      {/* Context Menu */}
+      {contextMenuVisible && contextMenuData && createPortal(
+        <div
+          id="annotation-context-menu"
+          className="fixed bg-white border border-gray-300 rounded-lg shadow-lg pointer-events-auto"
+          style={{
+            left: `${contextMenuPosition.x}px`,
+            top: `${contextMenuPosition.y}px`,
+            zIndex: 10001,
+                     }}
+        >
+          <div className="p-2">
+            <button
+              className="w-full text-left px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100"
+              onClick={showPopupFromContextMenu}
+            >
+              More Info
+            </button>
           </div>
         </div>,
         getPopupPortalContainer()
