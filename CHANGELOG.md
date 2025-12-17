@@ -20,3 +20,11 @@ All notable changes to this project will be documented in this file.
 
 - Add a popup view to show more information about the annotation
 - Add the possibility to customize the popup metadata and the popup delay
+
+## [0.1.2] - 2025-12-17
+
+### Added
+
+- Resolved a bug that was causing the lost of the metadata.
+- Resolved a bug taht was causing text replication when annoting already annoted text with another label.
+- Solved other minor bugs.

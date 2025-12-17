@@ -1,10 +1,9 @@
 import React, { useReducer, useEffect, useCallback, useState } from "react"
 import { createPortal } from "react-dom"
-import { Streamlit } from "streamlit-component-lib"
 import { useRenderData } from "../utils/StreamlitProvider"
 import { ActionTypes, IAction, IState, AnnotationPopupData } from "../types/annotatorTypes"
 import { initialState, reducer } from "../reducers/annotatorReducer"
-import { adjustSelectionBounds, getCharactersCountUntilNode, isLabeled, removeLabelData } from "../helpers/annotatorHelpers"
+import { adjustSelectionBounds, getCharactersCountUntilNode, isLabeled, removeLabelData, isLabeledByAny } from "../helpers/annotatorHelpers"
 
 const Annotator: React.FC = () => {
   const { args } = useRenderData()
@@ -49,7 +48,7 @@ const Annotator: React.FC = () => {
       selection.removeAllRanges();
     }
     
-    const rect = (event.target as HTMLElement).getBoundingClientRect();
+    // const rect = (event.target as HTMLElement).getBoundingClientRect();
     const contextMenuWidth = 150;
     const contextMenuHeight = 40;
     const margin = 10;
@@ -221,20 +220,35 @@ const Annotator: React.FC = () => {
       const finalStartIndex = selection.startOffset + charsBeforeStart;
       const finalEndIndex = selection.endOffset + charsBeforeEnd;
 
-      const textContent = container?.textContent || "";
+      // CRITICAL: Always use state.text (original text) instead of DOM textContent
+      // This ensures the text is never modified during annotations
+      const { start, end } = adjustSelectionBounds(state.text, finalStartIndex, finalEndIndex);
+      // Use state.text to extract the selected text, ensuring it matches the original
+      const selectedText = state.text.slice(start, end);
 
-      const { start, end } = adjustSelectionBounds(textContent, finalStartIndex, finalEndIndex);
-      const selectedText = textContent.slice(start, end);
+      // Check if the range is already labeled by the current label
+      const isLabeledByCurrent = isLabeled(start, end, state.labels[state.selectedLabel] || []);
+      
+      // Check if the range is labeled by ANY other label (excluding current label)
+      const otherLabels = { ...state.labels };
+      delete otherLabels[state.selectedLabel];
+      const isLabeledByOtherLabel = isLabeledByAny(start, end, otherLabels);
 
-      if (isLabeled(finalStartIndex, finalEndIndex, state.labels[state.selectedLabel])) {
-        const labels = removeLabelData(start, end, state.labels[state.selectedLabel]);
+      if (isLabeledByCurrent) {
+        // Remove annotation from current label (toggle off)
+        const labels = removeLabelData(start, end, state.labels[state.selectedLabel] || []);
         const newLabels = { ...state.labels };
         newLabels[state.selectedLabel] = labels;
         dispatch({ type: ActionTypes.SET_TEXT_LABELS, payload: { text: state.text, labels: newLabels, in_snake_case: state.in_snake_case, show_label_input: state.show_label_input, colors: state.colors } });
+      } else if (isLabeledByOtherLabel) {
+        // Text is already annotated with a different label - block the annotation
+        // Do nothing to prevent text duplication and preserve existing annotations
+        return;
       } else {
+        // Text is not annotated - add the new annotation
         const label = { start, end, label: selectedText };
         const newLabels = { ...state.labels };
-        newLabels[state.selectedLabel] = [...newLabels[state.selectedLabel], label];
+        newLabels[state.selectedLabel] = [...(newLabels[state.selectedLabel] || []), label];
         dispatch({ type: ActionTypes.SET_TEXT_LABELS, payload: { text: state.text, labels: newLabels, in_snake_case: state.in_snake_case, show_label_input: state.show_label_input, colors: state.colors } });
       }
     }

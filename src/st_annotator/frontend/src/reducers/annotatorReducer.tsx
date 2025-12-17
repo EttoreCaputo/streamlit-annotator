@@ -54,10 +54,18 @@ export const reducer = (state: IState, action: IAction): IState => {
   switch (action.type) {
     case ActionTypes.SET_TEXT_LABELS:
       const { text, labels, in_snake_case, show_label_input, colors } = action.payload;
+      // CRITICAL: Preserve the original text to ensure it's never modified during annotations.
+      // Only update text if:
+      // 1. state.text is empty (initial load from args), OR
+      // 2. The new text matches state.text (preserving it during label updates)
+      // This prevents any accidental text modifications during annotation operations.
+      const preservedText = (state.text && state.text !== "" && text !== state.text)
+        ? state.text  // Preserve original text if it exists and differs (shouldn't happen in normal flow)
+        : text;       // Use new text on initial load, or preserve existing text when text === state.text
       Streamlit.setComponentValue(formatKeys(labels, in_snake_case))
       return {
         ...state,
-        text,
+        text: preservedText,
         labels: labels || {},
         in_snake_case,
         show_label_input,
