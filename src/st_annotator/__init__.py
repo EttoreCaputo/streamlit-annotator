@@ -108,12 +108,6 @@ if __name__ == "__main__":
                     "start": 1467, 
                     "end": 1572, 
                     "label": "I would rather classify myself in the proponents of globalization as a speeding factor of global progress",
-                    "metadata": {
-                        "confidence": 0.95,
-                        "author": "Student",
-                        "stance": "Pro-globalization",
-                        "argumentType": "Personal position"
-                    }
                 }
             ],
             "Claim": [
@@ -121,11 +115,7 @@ if __name__ == "__main__":
                     "start": 330, 
                     "end": 445, 
                     "label": "Some people prefer to recognize globalization as a threat to ethnic and religious values of people of their country",
-                    "metadata": {
-                        "confidence": 0.88,
-                        "tone": "Negative",
-                        "perspective": "Cultural preservationist"
-                    }
+                    "metadata": {}
                 },
                 {
                     "start": 686, 
