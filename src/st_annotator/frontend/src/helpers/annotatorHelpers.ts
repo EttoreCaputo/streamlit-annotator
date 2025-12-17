@@ -28,6 +28,30 @@ export const removeLabelData = (
   )
 }
 
+// Check if a range is labeled by ANY label in all labels
+export const isLabeledByAny = (
+  start: number,
+  end: number,
+  allLabels: { [key: string]: ILabel[] }
+): boolean => {
+  return Object.values(allLabels).some((labels) =>
+    isLabeled(start, end, labels)
+  )
+}
+
+// Remove overlapping annotations from ALL labels
+export const removeOverlappingLabelsFromAll = (
+  start: number,
+  end: number,
+  allLabels: { [key: string]: ILabel[] }
+): { [key: string]: ILabel[] } => {
+  const newLabels: { [key: string]: ILabel[] } = {}
+  Object.keys(allLabels).forEach((labelKey) => {
+    newLabels[labelKey] = removeLabelData(start, end, allLabels[labelKey])
+  })
+  return newLabels
+}
+
 export const getCharactersCountUntilNode = (
   node: Node,
   parent: HTMLElement | null
