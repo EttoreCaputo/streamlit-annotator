@@ -41,5 +41,3 @@ if result:
                 st.json(ann['metadata'])
             else:
                 st.warning(f"⚠️ No metadata found for annotation: {ann['label']}")
-
-
